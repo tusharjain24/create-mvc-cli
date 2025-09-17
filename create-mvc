@@ -1,5 +1,5 @@
-#!/bin/zsh
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 # ----------------------------
 # Colors
@@ -48,32 +48,66 @@ LANG=$2
 PROJECT_NAME=$3
 
 # ----------------------------
+# Check project folder
+# ----------------------------
+if [[ -d "$PROJECT_NAME" ]]; then
+  echo -e "${RED}❌ Directory '$PROJECT_NAME' already exists. Choose another name.${NC}"
+  exit 1
+fi
+
+# ----------------------------
 # Node.js + Express
 # ----------------------------
 setup_node() {
-  mkdir -p $PROJECT_NAME && cd $PROJECT_NAME
+  if ! command -v node >/dev/null 2>&1; then
+    echo -e "${RED}❌ Node.js is not installed. Please install it first.${NC}"
+    exit 1
+  fi
+  if ! command -v npm >/dev/null 2>&1; then
+    echo -e "${RED}❌ npm is not installed or not in PATH.${NC}"
+    exit 1
+  fi
+
   echo -e "${YELLOW}📂 Creating Node.js + Express MVC project in $PROJECT_NAME${NC}"
 
+  mkdir -p "$PROJECT_NAME"
+  cd "$PROJECT_NAME"
+
+  # Step 1: Create src folder and subfolders
+  mkdir -p src
+  dirs=(controllers models routes services db middlewares utils)
+  for d in "${dirs[@]}"; do
+    mkdir -p "src/$d"
+    touch "src/$d/.gitkeep"
+  done
+
+  # Core files
+  touch src/index.js src/app.js src/constants.js
+
+  # Step 2: Create common config files
+  cat <<EOL > .gitignore
+node_modules
+.env
+.DS_Store
+dist
+coverage
+EOL
+
+  touch .prettierrc .prettierignore .env.example .env
+
+  # Step 3: Initialize Node.js and install dependencies
+  echo -e "${YELLOW}📦 Initializing npm and installing Express...${NC}"
   npm init -y >/dev/null 2>&1
   npm install express >/dev/null 2>&1
-  mkdir -p src/{controllers,models,routes,services,config,middlewares}
 
-  cat <<EOL > src/app.js
-const express = require('express');
-const app = express();
-app.use(express.json());
-app.use('/api', require('./routes'));
-module.exports = app;
-EOL
+  # Step 4: Add start script safely
+  if command -v jq >/dev/null 2>&1; then
+    jq '.scripts.start="node server.js"' package.json > tmp.json && mv tmp.json package.json
+  else
+    sed -i '' 's/"scripts": {/"scripts": { "start": "node server.js",/' package.json || true
+  fi
 
-  cat <<EOL > server.js
-const app = require('./src/app');
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(\`🚀 Server running on http://localhost:\${PORT}\`));
-EOL
-
-  npx json -I -f package.json -e 'this.scripts.start="node server.js"'
-  echo -e "${GREEN}✅ Node.js MVC project $PROJECT_NAME created!${NC}"
+  echo -e "${GREEN}✅ Node.js MVC project '$PROJECT_NAME' created successfully!${NC}"
   echo -e "👉 cd $PROJECT_NAME && npm start"
 }
 
@@ -81,30 +115,48 @@ EOL
 # Python + FastAPI (pip)
 # ----------------------------
 setup_fastapi_pip() {
-  mkdir -p $PROJECT_NAME && cd $PROJECT_NAME
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo -e "${RED}❌ Python3 is not installed.${NC}"
+    exit 1
+  fi
+  if ! command -v pip >/dev/null 2>&1; then
+    echo -e "${RED}❌ pip is not installed.${NC}"
+    exit 1
+  fi
+
   echo -e "${YELLOW}📂 Creating FastAPI (pip) MVC project in $PROJECT_NAME${NC}"
+
+  mkdir -p "$PROJECT_NAME/app"
+  cd "$PROJECT_NAME"
 
   echo "fastapi" > requirements.txt
   echo "uvicorn[standard]" >> requirements.txt
-  mkdir -p app/{api,models,schemas,services,core,middlewares} tests
-  touch app/api/__init__.py app/models/__init__.py app/schemas/__init__.py \
-        app/services/__init__.py app/core/__init__.py app/middlewares/__init__.py \
-        tests/__init__.py app/__init__.py
 
+  dirs=(api models schemas services core middlewares)
+  for d in "${dirs[@]}"; do
+    mkdir -p "app/$d"
+    touch "app/$d/__init__.py"
+  done
+  mkdir -p tests
+  touch tests/__init__.py app/__init__.py
+
+  # main.py
   cat <<EOL > app/main.py
 from fastapi import FastAPI
 app = FastAPI()
+
 @app.get("/")
 def read_root():
     return {"message": "Hello World from FastAPI (pip) MVC setup!"}
 EOL
 
+  # config.py
   cat <<EOL > app/core/config.py
 PROJECT_NAME = "FastAPI MVC Project"
 VERSION = "0.1.0"
 EOL
 
-  echo -e "${GREEN}✅ FastAPI (pip) project $PROJECT_NAME created!${NC}"
+  echo -e "${GREEN}✅ FastAPI (pip) project '$PROJECT_NAME' created!${NC}"
   echo -e "👉 cd $PROJECT_NAME && pip install -r requirements.txt && uvicorn app.main:app --reload"
 }
 
@@ -112,30 +164,42 @@ EOL
 # Python + FastAPI (uv)
 # ----------------------------
 setup_fastapi_uv() {
+  if ! command -v uv >/dev/null 2>&1; then
+    echo -e "${RED}❌ uv CLI not installed. Please install uv first.${NC}"
+    exit 1
+  fi
+
   echo -e "${YELLOW}📂 Creating FastAPI (uv) MVC project in $PROJECT_NAME${NC}"
-  uv init $PROJECT_NAME >/dev/null 2>&1
-  cd $PROJECT_NAME
+
+  uv init "$PROJECT_NAME" >/dev/null 2>&1
+  cd "$PROJECT_NAME"
   uv add fastapi uvicorn >/dev/null 2>&1
 
-  mkdir -p app/{api,models,schemas,services,core,middlewares} tests
-  touch app/api/__init__.py app/models/__init__.py app/schemas/__init__.py \
-        app/services/__init__.py app/core/__init__.py app/middlewares/__init__.py \
-        tests/__init__.py app/__init__.py
+  dirs=(api models schemas services core middlewares)
+  for d in "${dirs[@]}"; do
+    mkdir -p "app/$d"
+    touch "app/$d/__init__.py"
+  done
+  mkdir -p tests
+  touch tests/__init__.py app/__init__.py
 
+  # main.py
   cat <<EOL > app/main.py
 from fastapi import FastAPI
 app = FastAPI()
+
 @app.get("/")
 def read_root():
     return {"message": "Hello World from FastAPI (uv) MVC setup!"}
 EOL
 
+  # config.py
   cat <<EOL > app/core/config.py
 PROJECT_NAME = "FastAPI MVC Project"
 VERSION = "0.1.0"
 EOL
 
-  echo -e "${GREEN}✅ FastAPI (uv) project $PROJECT_NAME created!${NC}"
+  echo -e "${GREEN}✅ FastAPI (uv) project '$PROJECT_NAME' created!${NC}"
   echo -e "👉 cd $PROJECT_NAME && uv run uvicorn app.main:app --reload"
 }
 
