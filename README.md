@@ -10,29 +10,36 @@ Supports **Node.js (Express)** and **Python (FastAPI)**. Future support planned 
   - `controllers`, `models`, `routes`, `services`, `config`, `middlewares`
 - ⚡ Quick setup for:
   - **Node.js + Express**
-  - **Python + FastAPI (pip or uv)**
+  - **Python + FastAPI** (pip or uv)
 - 🎨 Colorful CLI prompts
 - 🐍 Interactive choice for Python frameworks
 - 🛠 Extensible design for more languages/frameworks in future
+- 📦 Installer script for easy setup and PATH integration
 
 ---
 
 ## 📦 Installation
 
 1. Clone the repo:
-   ```bash
-   git clone https://github.com/<your-username>/create-mvc-cli.git
-   cd create-mvc-cli
-   ```
+    ```bash
+    git clone https://github.com/<your-username>/create-mvc-cli.git
+    cd create-mvc-cli
+    ```
 
 2.  Make the script executable:
     ```bash
-    chmod +x create-mvc.sh
+    chmod +x create-mvc.sh install-create-mvc.sh
     ```
 
-3.  Move it to your PATH:
+3.  Run the installer (recommended, sets up PATH automatically):
     ```bash
-    sudo mv create-mvc.sh /usr/local/bin/create-mvc
+    zsh install-create-mvc.sh
+    ```
+    
+    ```
+    NOTE: This installs the CLI in a hidden folder ~/.create-mvc and adds it to your PATH.
+    If this is the first time on a macOS account, the installer will create .zshrc if it doesn’t exist.
+    You may need to restart the terminal or run source ~/.zshrc after installation.
     ```
 
 4.  Verify Installation:
