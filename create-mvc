@@ -119,8 +119,8 @@ setup_fastapi_pip() {
     echo -e "${RED}❌ Python3 is not installed.${NC}"
     exit 1
   fi
-  if ! command -v pip >/dev/null 2>&1; then
-    echo -e "${RED}❌ pip is not installed.${NC}"
+  if ! command -v pip3 >/dev/null 2>&1; then
+    echo -e "${RED}❌ pip3 is not installed.${NC}"
     exit 1
   fi
 
@@ -210,13 +210,23 @@ case $LANG in
   node) setup_node ;;
   python)
     echo -e "${YELLOW}🐍 Python backend detected.${NC}"
-    echo -e "${BLUE}👉 Choose a framework option:${NC}"
-    echo "1) FastAPI (pip)"
-    echo "2) FastAPI (uv)"
-    read -r choice
+
+    if ! command -v gum >/dev/null 2>&1; then
+      echo -e "${RED}❌ 'gum' is required for interactive menus.${NC}"
+      echo -e "👉 Install it first: ${YELLOW}brew install gum${NC} (or see https://github.com/charmbracelet/gum)"
+      exit 1
+    fi
+
+    # Customize gum colors: Blue highlight instead of pink
+    export GUM_CHOOSE_CURSOR_FOREGROUND="4"            # cursor ">" in blue
+    export GUM_CHOOSE_SELECTED_FOREGROUND="4"          # highlighted text in blue
+    export GUM_CHOOSE_SELECTED_BACKGROUND="0"          # background color 
+
+    choice=$(gum choose "FastAPI (pip)" "FastAPI (uv)")
+
     case $choice in
-      1) setup_fastapi_pip ;;
-      2) setup_fastapi_uv ;;
+      "FastAPI (pip)") setup_fastapi_pip ;;
+      "FastAPI (uv)") setup_fastapi_uv ;;
       *) echo -e "${RED}❌ Invalid choice${NC}"; exit 1 ;;
     esac
     ;;
