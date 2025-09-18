@@ -26,23 +26,34 @@ Supports **Node.js (Express)** and **Python (FastAPI)**. Future support planned 
     cd create-mvc-cli
     ```
 
-2.  Make the script executable:
+2. Make the scripts executable:
     ```bash
-    chmod +x create-mvc.sh install-create-mvc.sh
+    chmod +x create-mvc
     ```
 
-3.  Run the installer (recommended, sets up PATH automatically):
+3. Copy the script somewhere permanent, e.g.:
     ```bash
-    zsh install-create-mvc.sh
-    ```
-    
-    ```
-    NOTE: This installs the CLI in a hidden folder ~/.create-mvc and adds it to your PATH.
-    If this is the first time on a macOS account, the installer will create .zshrc if it doesn’t exist.
-    You may need to restart the terminal or run source ~/.zshrc after installation.
+    mkdir -p ~/.create-mvc
+    cp create-mvc.sh ~/.create-mvc/create-mvc
     ```
 
-4.  Verify Installation:
+4. Add the folder to your shell config:
+
+   - For **zsh** (default on macOS):
+     ```bash
+     echo 'export CREATE_MVC_PATH="$HOME/.create-mvc:$PATH"' >> ~/.zshrc
+     source ~/.zshrc
+     ```
+
+   - For **bash** (Linux):
+     ```bash
+     echo 'export CREATE_MVC_PATH="$HOME/.create-mvc:$PATH"' >> ~/.bashrc
+     source ~/.bashrc
+     ```
+
+---
+
+5.  ✅ Verify Installation
     ```bash
     create-mvc --help
     ```
